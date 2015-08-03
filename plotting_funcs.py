@@ -71,17 +71,13 @@ def df_hist(df, bins = 20, kde = False, norm_hist = True, columns = None, gridsi
 		# n is equal to the sqrt of the number of columns (take the ciel of that though). 
 		# It'll end up as square as possible.  The only issue with this is if there are only two
 		# columns - we end up with a 2 by 2 plot, but we really just want a 1 x 2. 
-		sqrt_columns = math.ceil(len(columns) ** 0.5)
+		sqrt_columns = math.ceil(len(plot_columns) ** 0.5)
 		gridsize = (sqrt_columns, sqrt_columns)
 		
-		if len(columns) == 2: 
+		if len(plot_columns) == 2: 
 			gridsize = (1, 2)
 
 	for index, col in enumerate(plot_columns): 
-		# Set the title to the column name. I know type checking isn't a python thing, but if 
-		# somebody wants to pass in the column integer versus name, I want to print the actual
-		# column name, and not just the index number. 
-		title = df.columns[index] if type(col) is int else col
 		# Grab the appropriate column of the data. Using ix 
 		data = df.ix[:, col]
 		sub = plt.subplot(gridsize[0], gridsize[1], index + 1)
