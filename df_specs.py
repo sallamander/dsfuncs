@@ -3,8 +3,13 @@ import numpy as np
 
 # These first two functions are for now set really just in the case that I want 
 # to expand upon them. They're pretty pointless as is. 
-def load_data(filename):
-	df = pd.read_csv(filename) 
+def load_data(filename, dates = None):
+	# Dates option will be a list of strings, where the string names 
+	# correspond to column names. 
+	if dates: 
+		df = pd.read_csv(filename, parse_dates = dates)	
+	else: 	
+		df = pd.read_csv(filename) 
 	return df
 
 def get_columns(df, column_list, filename = None, output = False): 
