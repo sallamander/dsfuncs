@@ -1,4 +1,5 @@
 import scipy.stats as scs
+import numpy as np
 from collections import defaultdict
 
 def change_type(df, columns, type): 
@@ -14,10 +15,17 @@ def test_transforms(target, feature, df=None):
 					   'log': np.log }
 
 	transforms_dict = {}
+	best = 0
 	for k, v in transformations.iteritems(): 
 		feature_transformed = v(feature)
-		pearson = scs.pearsonr(feature_transformed, target)
+		mask = np.logical_and(~np.isnan(feature_transformed), ~np.isinf(feature_transformed))
+		feature_transformed = feature_transformed[mask]
+		pearson = scs.pearsonr(feature_transformed, target[mask])
 		transforms_dict[k] = pearson
+		if abs(pearson[0]) > best: 
+			best = abs(pearson[0])
+			transforms_dict['best'] = k
+
 
 	return transforms_dict
 
