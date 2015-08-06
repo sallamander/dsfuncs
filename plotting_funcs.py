@@ -6,6 +6,7 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 
 def plt_specs(ax = None, xlab = None, ylab = None, title = None, save_title = None, 
 			  sub_plot = None, xlim = None, ylim = None, 
@@ -62,7 +63,7 @@ def plt_axis(ax = None, xlab = None, ylab = None, title = None, xlim = None, yli
 
 def df_hist(df, bins = 20, kde = False, norm_hist = True, columns = None, gridsize = None, xlim = None, 
 			ylim = None, xlab = None, ylab = None, legend = None, hist_kws = None, grid_bool = None,
-			title = None): 
+			title = None, save_title = None): 
 	# We'll iterate through the columns the user passes in and plot a histogram for 
 	# each column. If no columns were passed in, then plot a histogram for all of them. 
 	plot_columns = df.columns if columns is None else columns
@@ -81,6 +82,7 @@ def df_hist(df, bins = 20, kde = False, norm_hist = True, columns = None, gridsi
 		# Grab the appropriate column of the data. Using ix 
 		data = df.ix[:, col]
 		sub = plt.subplot(gridsize[0], gridsize[1], index + 1)
+		data = np.nan_to_num(data)
 		sns.distplot(data, hist = True, bins = bins, kde = kde, norm_hist = norm_hist, hist_kws = hist_kws)
 		plt_specs(ax = sub, xlim = xlim, ylim = ylim, xlab = xlab, ylab = ylab, title = title, legend = legend, 
-		 		  grid_bool = grid_bool)
+		 		  grid_bool = grid_bool, save_title = save_title)
