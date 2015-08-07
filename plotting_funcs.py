@@ -10,7 +10,7 @@ import numpy as np
 
 def plt_specs(ax = None, xlab = None, ylab = None, title = None, save_title = None, 
 			  sub_plot = None, xlim = None, ylim = None, xticks = None, yticks = None,
-			  legend = None, tight_layout = None, grid_bool = None, axis = None): 
+			  legend = None, tight_layout = None, grid_bool = None, axis = None, tit_fontsize = 16): 
 	# If the parameter was passed in, set it for that plot. Otherwise 
 	# do nothing. The first parameter we check for is the axis = if the axis was 
 	# passed, then we call the plt_axis function and plot everything on that axis. 
@@ -25,7 +25,7 @@ def plt_specs(ax = None, xlab = None, ylab = None, title = None, save_title = No
 		if ylab: 
 			plt.ylabel(ylab)
 		if title: 
-			plt.title(title)
+			plt.title(title, fontsize=tit_fontsize)
 		if xlim: 
 			plt.xlim(xlim)
 		if ylim: 
