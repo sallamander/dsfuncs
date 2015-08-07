@@ -9,15 +9,16 @@ import math
 import numpy as np
 
 def plt_specs(ax = None, xlab = None, ylab = None, title = None, save_title = None, 
-			  sub_plot = None, xlim = None, ylim = None, 
-			  legend = None, tight_layout = None, grid_bool = None): 
+			  sub_plot = None, xlim = None, ylim = None, xticks = None, yticks = None,
+			  legend = None, tight_layout = None, grid_bool = None, axis = None): 
 	# If the parameter was passed in, set it for that plot. Otherwise 
 	# do nothing. The first parameter we check for is the axis = if the axis was 
 	# passed, then we call the plt_axis function and plot everything on that axis. 
 	# Then we come back and plot the more general plt things (tight layout and save_title. 
 	if ax: 
 		plt_axis(ax = ax, xlab = xlab, ylab = ylab, title = title, xlim = xlim, 
-				 ylim =ylim, grid_bool = grid_bool)
+				 ylim =ylim, grid_bool = grid_bool, xticks = xticks, yticks = yticks, 
+				 axis = axis)
 	else: 
 		if xlab: 
 			plt.xlabel(xlab)
@@ -36,11 +37,18 @@ def plt_specs(ax = None, xlab = None, ylab = None, title = None, save_title = No
 		plt.legend(loc = 'best') 
 	if tight_layout: 
 		plt.tight_layout()
+	if xticks: 
+		plt.xticks(xticks)
+	if yticks: 
+		plt.yticks(yticks)
+	if axis: 
+		plt.axis(axis)
 	# This needs to be the last thing, or else anything rendered after this won't save. 
 	if save_title: 
 		plt.savefig(save_title)
 
-def plt_axis(ax = None, xlab = None, ylab = None, title = None, xlim = None, ylim = None, grid_bool = None, legend = None): 
+def plt_axis(ax = None, xlab = None, ylab = None, title = None, xlim = None, ylim = None, grid_bool = None, legend = None, 
+			xticks = None, yticks = None, axis = None): 
 	# If the parameter was passed in, then set it for the axis that is passed in. Note that 
 	# an axis has to be passed in. It's not explicit, since I have put a default in as None - I'm 
 	# using that to let the user know that an axis has to be passed in. 
@@ -58,6 +66,12 @@ def plt_axis(ax = None, xlab = None, ylab = None, title = None, xlim = None, yli
 		ax.set_ylim(ylim)
 	if legend: 
 		ax.legend = True
+	if xticks: 
+		ax.xticks(xticks)
+	if yticks: 
+		ax.yticks(yticks)
+	if axis: 
+		ax.axis(axis)
 	if grid_bool is not None: 
 			ax.grid(grid_bool)
 
