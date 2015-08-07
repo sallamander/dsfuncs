@@ -1,22 +1,6 @@
 import pandas as pd
 import numpy as np
 
-# These first two functions are for now set really just in the case that I want 
-# to expand upon them. They're pretty pointless as is. 
-def load_data(filename, dates = None):
-	# Dates option will be a list of strings, where the string names 
-	# correspond to column names. 
-	if dates: 
-		df = pd.read_csv(filename, parse_dates = dates)	
-	else: 	
-		df = pd.read_csv(filename) 
-	return df
-
-def get_columns(df, column_list, filename = None, output = False): 
-	if filename: 
-		df = load_data(filename)
-	return df[column_list]
-
 # This function here is so that you can get an easily readable format 
 # for all the columns in your dataframes. This isn't really worthwhile when you only 
 # have a couple of data frames, or a data frame with only 1 or two columns. 
