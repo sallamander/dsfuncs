@@ -1,7 +1,3 @@
-# This is a module that will have some convience functions for plotting. For some, they 
-# might actually be pretty convinient (like the ones that relate to plotting columsn from 
-# data frames.) Others aren't really anything special - I just got tired of typing plt.feature
-# any time I wanted to set a feature. 
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -11,10 +7,17 @@ import numpy as np
 def plt_specs(ax = None, xlab = None, ylab = None, title = None, save_title = None, 
 			  sub_plot = None, xlim = None, ylim = None, xticks = None, yticks = None,
 			  legend = None, tight_layout = None, grid_bool = None, axis = None, tit_fontsize = 16): 
-	# If the parameter was passed in, set it for that plot. Otherwise 
-	# do nothing. The first parameter we check for is the axis = if the axis was 
-	# passed, then we call the plt_axis function and plot everything on that axis. 
-	# Then we come back and plot the more general plt things (tight layout and save_title. 
+	'''
+	Inputs: Any of a number of plotting parameters. 
+	Outputs: None. 
+
+	If a given plotting parameter was passed in, set it for that plot. Otherwise do nothing. 
+	The first parameter we check for is the axis. If the axis was passed, then we call the plt_axis 
+	function and plot everything on that axis. Then we come back and plot the more general plt things 
+	(tight layout and save_title).  
+
+	This function is a convenience function to save time from having to type plt. all the time. 
+	'''
 	if ax: 
 		plt_axis(ax = ax, xlab = xlab, ylab = ylab, title = title, xlim = xlim, 
 				 ylim =ylim, grid_bool = grid_bool, xticks = xticks, yticks = yticks, 
@@ -49,9 +52,16 @@ def plt_specs(ax = None, xlab = None, ylab = None, title = None, save_title = No
 
 def plt_axis(ax = None, xlab = None, ylab = None, title = None, xlim = None, ylim = None, grid_bool = None, legend = None, 
 			xticks = None, yticks = None, axis = None): 
-	# If the parameter was passed in, then set it for the axis that is passed in. Note that 
-	# an axis has to be passed in. It's not explicit, since I have put a default in as None - I'm 
-	# using that to let the user know that an axis has to be passed in. 
+	''' 
+	Input: Any number of matplotlib.pyplot.axis parameters. 
+	Output: None. 
+
+	If the parameter was passed in, then set it for the axis that is passed in. This is an axis 
+	version of the plt_specs function. Note that an axis has to be passed in. It's not explicit, 
+	since I have put a default in as None - I'm using that to let the user know that an axis has 
+	to be passed in. 
+	''' 
+
 	if ax is None: 
 		raise Exception('No axis passed in... if there isnt one, try using plt_specs instead.')
 	if xlab: 
@@ -78,14 +88,25 @@ def plt_axis(ax = None, xlab = None, ylab = None, title = None, xlim = None, yli
 def df_hist(df, bins = 20, kde = False, norm_hist = True, columns = None, gridsize = None, xlim = None, 
 			ylim = None, xlab = None, ylab = None, legend = None, hist_kws = None, grid_bool = None,
 			title = None, save_title = None, tight_layout = None): 
-	# We'll iterate through the columns the user passes in and plot a histogram for 
-	# each column. If no columns were passed in, then plot a histogram for all of them. 
+	'''
+	Input: DataFrame, possible plotting parameters. 
+	Output: Grid of Seaborn histogram plots. 
+
+	The point of this function is just to give a little bit more flexibility than the pandas.df.hist
+	function that is offered. Instead of restricting all histograms to look the exact same (as in the 
+	pandas.df.hist function), I want users to be able to pass parameters for each of those histograms. If
+	they want the x-label on one histogram to be different than the others, so be it. If they want the grid 
+	off on all of their histograms, then I want to make that happen. 
+
+	As of right now, this function doesn't offer too much functionality past the pandas.df.hist function 
+	that currrently exists. It is a work in progress. 
+	'''
+	# If the user didn't pass a list of columns in, then plot all columns in the DataFrame. 
 	plot_columns = df.columns if columns is None else columns
 	if gridsize is None: 
-		# If the gridsize is empty, then what we'll do is to simply make an n x n grid, where
-		# n is equal to the sqrt of the number of columns (take the ciel of that though). 
-		# It'll end up as square as possible.  The only issue with this is if there are only two
-		# columns - we end up with a 2 by 2 plot, but we really just want a 1 x 2. 
+		# If the user doesn't pass in a gridsize, make it as close to n x n as possible, where 
+		# n is the sqrt of the number of columns, unless there are two, in which case we default
+		# to a (1, 2). 
 		sqrt_columns = math.ceil(len(plot_columns) ** 0.5)
 		gridsize = (sqrt_columns, sqrt_columns)
 		
@@ -93,7 +114,6 @@ def df_hist(df, bins = 20, kde = False, norm_hist = True, columns = None, gridsi
 			gridsize = (1, 2)
 
 	for index, col in enumerate(plot_columns): 
-		# Grab the appropriate column of the data. Using ix 
 		data = df.ix[:, col]
 		sub = plt.subplot(gridsize[0], gridsize[1], index + 1)
 		data = np.nan_to_num(data)
