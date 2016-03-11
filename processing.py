@@ -10,7 +10,7 @@ def remove_outliers(data, std_dev_cutoff=2):
     it is available as an argument to be passed in. 
 
     Args: 
-        data: numpy.ndarray 
+        data: 1d numpy.ndarray 
         std_dev_cutoff: int
     """
 

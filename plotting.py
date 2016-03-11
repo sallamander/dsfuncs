@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+from itertools import izip
 
 from .processing import remove_outliers
 
@@ -26,7 +27,25 @@ def _plot_categorical_var_dist(var_data):
     Args: 
         var_data: 1d numpy.ndarray
     """
-    pass 
+
+    var_data_counts = pd.Series(var_data).value_counts()
+    var_data_percs = var_data_counts / var_data_counts.sum()
+
+    ax = sns.barplot(var_data_percs.index, 
+            var_data_percs.values, palette="BuGn_d") 
+    bars = ax.patches
+    labels = var_data_percs.values
+    indices = var_data_percs.index
+    labels_font = {'fontname':'Arial', 'size':'12', 
+            'color':'black', 'weight':'normal', 'verticalalignment':'bottom'}
+
+    for idx, bar, label in izip(indices, bars, labels): 
+        height = bar.get_height()
+        label = label * 100
+        ax.text(idx, height, "{0:.2f}".format(label), 
+                ha='center', va='bottom', **labels_font)
+
+    plt.show()
 
 def _plot_continuous_var_dist(var_data): 
     """Plot a boxplot of the continuous variable data inputted, both with 
