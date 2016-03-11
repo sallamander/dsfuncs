@@ -54,5 +54,14 @@ def _plot_continuous_var_dist(var_data):
     Args: 
         var_data: 1d numpy.ndarray
     """
-    pass
 
+    # Plot the data with outliers. 
+    plt.subplot(1, 2, 1)
+    var_data.plot(kind='box')
+
+    var_data_wo_outliers = remove_outliers(var_data)
+    # Plot the data without outliers. 
+    plt.subplot(1, 2, 2)
+    var_data_wo_outliers.plot(kind='box')
+
+    plt.show()
