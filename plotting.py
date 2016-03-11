@@ -28,7 +28,7 @@ def _plot_categorical_var_dist(var_data):
         var_data: 1d numpy.ndarray
     """
 
-    var_data_counts = pd.Series(var_data).value_counts()
+    var_data_counts = var_data.value_counts()
     var_data_percs = var_data_counts / var_data_counts.sum()
 
     ax = sns.barplot(var_data_percs.index, 
