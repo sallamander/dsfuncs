@@ -5,7 +5,7 @@ from itertools import izip
 
 from .processing import remove_outliers
 
-def plot_var_dist(var_data, categorical=False): 
+def plot_var_dist(var_data, categorical=False, ax=None): 
     """Plot the distribution of the inputted variable data. 
 
     Given the inputted data, plot the distribution of the data
@@ -17,11 +17,11 @@ def plot_var_dist(var_data, categorical=False):
     """
 
     if not categorical: 
-        _plot_continuous_var_dist(var_data)
+        _plot_continuous_var_dist(var_data, ax)
     else: 
-        _plot_categorical_var_dist(var_data)
+        _plot_categorical_var_dist(var_data, ax)
 
-def _plot_categorical_var_dist(var_data): 
+def _plot_categorical_var_dist(var_data, ax): 
     """Plot a boxplot of the continuous variable data inputted. 
 
     Args: 
@@ -31,8 +31,12 @@ def _plot_categorical_var_dist(var_data):
     var_data_counts = var_data.value_counts()
     var_data_percs = var_data_counts / var_data_counts.sum()
 
-    ax = sns.barplot(var_data_percs.index, 
-            var_data_percs.values, palette="BuGn_d") 
+    if ax: 
+        sns.barplot(var_data_percs.index, 
+                var_data_percs.values, palette="BuGn_d", ax=x)
+    else: 
+        ax = sns.barplot(var_data_percs.index, 
+                var_data_percs.values, palette="BuGn_d") 
     bars = ax.patches
     labels = var_data_percs.values
     indices = var_data_percs.index
@@ -47,7 +51,7 @@ def _plot_categorical_var_dist(var_data):
 
     plt.show()
 
-def _plot_continuous_var_dist(var_data): 
+def _plot_continuous_var_dist(var_data, ax): 
     """Plot a boxplot of the continuous variable data inputted, both with 
     and without outliers. 
 
@@ -56,12 +60,19 @@ def _plot_continuous_var_dist(var_data):
     """
 
     # Plot the data with outliers. 
-    plt.subplot(1, 2, 1)
-    var_data.plot(kind='box')
+    if ax is not None: 
+        var_data.plot(kind='box', ax=ax[0])
+    else: 
+        plt.subplot(1, 2, 1)
+        var_data.plot(kind='box')
+        
 
     var_data_wo_outliers = remove_outliers(var_data)
     # Plot the data without outliers. 
-    plt.subplot(1, 2, 2)
-    var_data_wo_outliers.plot(kind='box')
+    if ax is not None: 
+        var_data_wo_outliers.plot(kind='box', ax=ax[1])
+    else: 
+        plt.subplot(1, 2, 2)
+        var_data_wo_outliers.plot(kind='box')
 
     plt.show()
