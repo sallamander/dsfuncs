@@ -5,7 +5,7 @@ from itertools import izip
 
 from .processing import remove_outliers
 
-def plot_var_dist(var_data, categorical=False, ax=None): 
+def plot_var_dist(var_data, categorical=False, ax=None, show=True): 
     """Plot the distribution of the inputted variable data. 
 
     Given the inputted data, plot the distribution of the data
@@ -17,11 +17,11 @@ def plot_var_dist(var_data, categorical=False, ax=None):
     """
 
     if not categorical: 
-        _plot_continuous_var_dist(var_data, ax)
+        _plot_continuous_var_dist(var_data, ax, show)
     else: 
-        _plot_categorical_var_dist(var_data, ax)
+        _plot_categorical_var_dist(var_data, ax, show)
 
-def _plot_categorical_var_dist(var_data, ax): 
+def _plot_categorical_var_dist(var_data, axs, show): 
     """Plot a boxplot of the continuous variable data inputted. 
 
     Args: 
@@ -48,10 +48,11 @@ def _plot_categorical_var_dist(var_data, ax):
         label = label * 100
         ax.text(idx, height, "{0:.2f}".format(label), 
                 ha='center', va='bottom', **labels_font)
+    
+    if show: 
+        plt.show()
 
-    plt.show()
-
-def _plot_continuous_var_dist(var_data, ax): 
+def _plot_continuous_var_dist(var_data, ax, show): 
     """Plot a boxplot of the continuous variable data inputted, both with 
     and without outliers. 
 
@@ -74,5 +75,6 @@ def _plot_continuous_var_dist(var_data, ax):
     else: 
         plt.subplot(1, 2, 2)
         var_data_wo_outliers.plot(kind='box')
-
-    plt.show()
+    
+    if show: 
+        plt.show()
