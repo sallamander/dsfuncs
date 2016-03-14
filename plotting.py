@@ -39,6 +39,20 @@ def _plot_categorical_var_dist(var_data, ax, show):
                 var_data_percs.values, palette="BuGn_d") 
     bars = ax.patches
     labels = var_data_percs.values
+    _add_bar_text(ax, bars, labels) 
+
+    if show: 
+        plt.show()
+
+def _add_bar_text(ax, bars, labels): 
+    """Add text labels to some plotted bars. 
+
+    Args: 
+        ax: matplotlib.axes object
+        bars: matplotlib.patches object
+        labels: numpy.ndarray
+    """
+
     labels_font = {'fontname':'Arial', 'size':'12', 
             'color':'black', 'weight':'normal', 'verticalalignment':'bottom'}
 
@@ -48,9 +62,6 @@ def _plot_categorical_var_dist(var_data, ax, show):
         label = label * 100
         ax.text(idx, height, "{0:.2f}".format(label), 
                 ha='center', va='bottom', **labels_font)
-    
-    if show: 
-        plt.show()
 
 def _plot_continuous_var_dist(var_data, ax, show): 
     """Plot a boxplot of the continuous variable data inputted, both with 
@@ -119,14 +130,6 @@ def plot_binary_response(df, categorical, response):
 
     bars = ax.patches
     labels = category_percents.values
-    labels_font = {'fontname':'Arial', 'size':'12', 
-            'color':'black', 'weight':'normal', 'verticalalignment':'bottom'}
-
-    for idx, bar, label in izip(xrange(len(labels)), bars, labels): 
-        height = bar.get_height()
-        width = bar.get_width()
-        label = label * 100
-        ax.text(idx, height, "{0:.2f}".format(label), 
-                ha='center', va='bottom', **labels_font)
+    _add_bar_text(ax, bars, labels) 
 
     plt.show()
