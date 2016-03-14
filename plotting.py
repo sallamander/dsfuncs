@@ -82,7 +82,7 @@ def _plot_continuous_var_dist(var_data, ax, show):
     if show: 
         plt.show()
 
-def plot_binary_response(df, categorical, response, ax, show): 
+def plot_binary_response(df, categorical, response): 
     """Plot the percentage of a True/False binary response across
     a categorical variable. 
 
@@ -102,4 +102,31 @@ def plot_binary_response(df, categorical, response, ax, show):
         show: bool
             Boolean that holds whether or not to display the plot after.
     """
-    pass
+
+    category_numbers = df.groupby(categorical).count().iloc[:, 0]
+    category_percents = category_numbers / category_numbers.sum()
+    
+    categories = category_numbers.index
+
+    fires_percents = []
+    for idx, category in enumerate(categories):
+        fire_counts = ((df[categorical] == category) & 
+            (df[response] == True)).sum()
+        fire_percent = float(fire_counts) / category_numbers[idx] 
+        fires_percents.append(fire_percent)
+
+    ax = sns.barplot(categories, fires_percents, palette="BuGn_d") 
+
+    bars = ax.patches
+    labels = category_percents.values
+    labels_font = {'fontname':'Arial', 'size':'12', 
+            'color':'black', 'weight':'normal', 'verticalalignment':'bottom'}
+
+    for idx, bar, label in izip(xrange(len(labels)), bars, labels): 
+        height = bar.get_height()
+        width = bar.get_width()
+        label = label * 100
+        ax.text(idx, height, "{0:.2f}".format(label), 
+                ha='center', va='bottom', **labels_font)
+
+    plt.show()
