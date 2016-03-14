@@ -21,7 +21,7 @@ def plot_var_dist(var_data, categorical=False, ax=None, show=True):
     else: 
         _plot_categorical_var_dist(var_data, ax, show)
 
-def _plot_categorical_var_dist(var_data, axs, show): 
+def _plot_categorical_var_dist(var_data, ax, show): 
     """Plot a boxplot of the continuous variable data inputted. 
 
     Args: 
@@ -33,18 +33,18 @@ def _plot_categorical_var_dist(var_data, axs, show):
 
     if ax: 
         sns.barplot(var_data_percs.index, 
-                var_data_percs.values, palette="BuGn_d", ax=x)
+                var_data_percs.values, palette="BuGn_d", ax=ax)
     else: 
         ax = sns.barplot(var_data_percs.index, 
                 var_data_percs.values, palette="BuGn_d") 
     bars = ax.patches
     labels = var_data_percs.values
-    indices = var_data_percs.index
     labels_font = {'fontname':'Arial', 'size':'12', 
             'color':'black', 'weight':'normal', 'verticalalignment':'bottom'}
 
-    for idx, bar, label in izip(indices, bars, labels): 
+    for idx, bar, label in izip(xrange(len(labels)), bars, labels): 
         height = bar.get_height()
+        width = bar.get_width()
         label = label * 100
         ax.text(idx, height, "{0:.2f}".format(label), 
                 ha='center', va='bottom', **labels_font)
