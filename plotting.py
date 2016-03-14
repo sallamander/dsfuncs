@@ -109,9 +109,6 @@ def plot_binary_response(df, categorical, response):
             Holds the column name of the categorical variable. 
         response: str
             Holds the column name of the response variable. 
-        ax: matplotlib.axes
-        show: bool
-            Boolean that holds whether or not to display the plot after.
     """
 
     category_numbers = df.groupby(categorical).count().iloc[:, 0]
