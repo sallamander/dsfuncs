@@ -81,3 +81,25 @@ def _plot_continuous_var_dist(var_data, ax, show):
     
     if show: 
         plt.show()
+
+def plot_binary_response(df, categorical, response, ax, show): 
+    """Plot the percentage of a True/False binary response across
+    a categorical variable. 
+
+    Take the inputted DataFrame, and plot the binary response variable
+    percentages across cateogries of a categorical variable. For each 
+    category in the categorical variable, use the percent of True's as the 
+    height of the bar. Use the percent of the total obs. that that category 
+    makes up as the text above the bar. 
+
+    Args: 
+        df: Pandas DataFrame
+        categorical: str
+            Holds the column name of the categorical variable. 
+        response: str
+            Holds the column name of the response variable. 
+        ax: matplotlib.axes
+        show: bool
+            Boolean that holds whether or not to display the plot after.
+    """
+    pass
