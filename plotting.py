@@ -116,14 +116,14 @@ def plot_binary_response(df, categorical, response):
     
     categories = category_numbers.index
 
-    fires_percents = []
+    response_percents = []
     for idx, category in enumerate(categories):
-        fire_counts = ((df[categorical] == category) & 
+        response_counts = ((df[categorical] == category) & 
             (df[response] == True)).sum()
-        fire_percent = float(fire_counts) / category_numbers[idx] 
-        fires_percents.append(fire_percent)
+        response_cat_percent = float(response_counts) / category_numbers[idx] 
+        response_percents.append(response_cat_percent)
 
-    ax = sns.barplot(categories, fires_percents, palette="BuGn_d") 
+    ax = sns.barplot(categories, response_percents, palette="BuGn_d") 
 
     bars = ax.patches
     labels = category_percents.values
