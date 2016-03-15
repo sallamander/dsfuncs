@@ -43,7 +43,7 @@ class USMap(object):
                     lon_2 = -65., lon_0 = -97.5)
         self.geo_map.readshapefile(shapefile_path, self.geo_level)
 
-class Statemap(): 
+class StateMap(): 
     """This docstring will describe how to interact with the Statemap class. 
 
     this class will take the instantiated usmap from the usmap class, and then 
@@ -80,13 +80,13 @@ class Statemap():
 
     def __init__(self, shapefile_path, geo_level, state_name): 
         self.state_name = state_name
-        self.state_fips = fips_dict[self.state_name]
+        self.state_fips = self.fips_dict[self.state_name]
         self.geo_level = geo_level
+        self.lat_pts = []
+        self.lng_pts = []
         self._initialize_map(shapefile_path)
-        self.lat_pnts = []
-        self.lng_pnts = []
 
-    def self._initialize_map(self, shapefile_path): 
+    def _initialize_map(self, shapefile_path): 
         """Initalize the Basemap that holds the state map of counties.
 
         Args: 
@@ -104,12 +104,20 @@ class Statemap():
     def _parse_to_state(self, src): 
         """Filter the USMap down to a state map now."""
 
-        feats = [feature for feat in src for feature in \
-                self._parse_feat(feat['geometry']['coordinates']) if \
-                feat['properties']['STATEFP'] == self.state_fips]
+        feats=[]
+        for feat in src: 
+            if feat['properties']['STATEFP'] == self.state_fips:  
+                features = feat['geometry']['coordinates']
+                for feat in features: 
+                    feat_arr = np.array(feat)
+                    feats.append(feat_arr)
+                    # The couple that are 1d cause issues. 
+                    if len(feat_arr.shape) > 1: 
+                        self._parse_feat(feat_arr)
+
         self.feats_arr = np.array(feats)
 
-    def _parse_feat(self, feature): 
+    def _parse_feat(self, feat_arr): 
         """Parse a feature and grab the relevant parts. 
 
         For any feature that comes in, we need to consider it's 
@@ -122,22 +130,15 @@ class Statemap():
             feat: list
         """
 
-        output_feats = []
-        for feat in feature: 
-            feat_arr = np.array(feat)
-            output_feats.append(feat) 
-            # Here is where we keep track of the min/max. of the lat/long. 
-            # for this particular feature. 1 or two features have shape 
-            # with only 1 element, and we can safely ignore those here. 
-            if len(feat_arr.shape) > 1: 
-                lng_pts_arr = feat_arr[np.where(feat_arr[:, 0] < 0)]
-                lat_pts_arr = feat_arr[np.where(feat_arr[:, 1] > 0)]
-                self.lng_pts.extend([lng_pts_arr[:, 0].max(), 
-                    lng_pts_arr[:, 0].min()])
-                self.lat_pts.extend([lat_pts_arr[:, 1].max(), 
-                    lat_pts_arr[:, 1].min()])
-
-        return output_feats
+        # Here is where we keep track of the min/max. of the lat/long. 
+        # for this particular feature. 1 or two features have shape 
+        # with only 1 element, and we can safely ignore those here. 
+        lng_pts_arr = feat_arr[np.where(feat_arr[:, 0] < 0)]
+        lat_pts_arr = feat_arr[np.where(feat_arr[:, 1] > 0)]
+        self.lng_pts.extend([lng_pts_arr[:, 0].max(), 
+            lng_pts_arr[:, 0].min()])
+        self.lat_pts.extend([lat_pts_arr[:, 1].max(), 
+            lat_pts_arr[:, 1].min()])
 
     def _calc_bounds(self): 
         """This will calculate the bounds/stipulations of our map. 
@@ -165,9 +166,13 @@ class Statemap():
                 llcrnrlat=self._lat_min - 1, urcrnrlon=self._lng_max + 1,
                 urcrnrlat=self._lat_max + 1, resolution='l', projection='aea',
                 lat_1=self._lat_min, lat_2=self._lat_max, 
+                lon_1=self._lng_min, lon_2=self._lng_max, 
                 lon_0=self._center_lng, lat_0=self._center_lat)
 
         for feat in self.feats_arr: 
+            # Even though I put the data into 2D format before using it,
+            # there were still a couple of 3D data points that lead to issues.
+            # Ignoring them didn't seem to cause any problems. 
             if len(feat.shape) == 3:
                 rows, cols = feat.shape[1], feat.shape[2]
                 feat = feat.reshape(rows, cols)
