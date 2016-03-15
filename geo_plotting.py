@@ -145,4 +145,10 @@ class Statemap():
         as well as the lat/long bounds of the map. We'll also calculate 
         where the center of the map needs to be. 
         """
-        pass
+
+        lng_pts_arr = np.array(self.lng_pts)
+        lat_pts_arr = np.array(self.lat_pts)
+        self._lat_min, self._lat_max = lat_pts_arr.min(), lat_pts_arr.max()
+        self._lng_min, self._lng_max = lng_pts_arr.min(), lng_pts_arr.max()
+
+
