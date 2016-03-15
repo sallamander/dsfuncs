@@ -99,6 +99,7 @@ class Statemap():
         src = fiona.open(shapefile_path)
         self._parse_to_state(src)
         self._calc_bounds()
+        self._create_map()
 
     def _parse_to_state(self, src): 
         """Filter the USMap down to a state map now."""
@@ -150,5 +151,26 @@ class Statemap():
         lat_pts_arr = np.array(self.lat_pts)
         self._lat_min, self._lat_max = lat_pts_arr.min(), lat_pts_arr.max()
         self._lng_min, self._lng_max = lng_pts_arr.min(), lng_pts_arr.max()
+        self._center_lng = (self._lng_max - self._lng_min) / 2 + self._lng_min
+        self._center_lat = (self._lat_max - self._lat_min) / 2 + self._lat_min
 
+    def _create_map(self): 
+        """Build the map of the inputted state."""
 
+        fig = plt.figure(figsize=(20, 10))
+        # The first four arguments define the bounds of the box, with a 
+        # padding of plus one. The next two are some standard specs., and 
+        # the last give additional bounds to the box and where to center it. 
+        self.geo_map = Basemap(llcrnrlon=self._lng_min - 1,
+                llcrnrlat=self._lat_min - 1, urcrnrlon=self._lng_max + 1,
+                urcrnrlat=self._lat_max + 1, resolution='l', projection='aea',
+                lat_1=self._lat_min, lat_2=self._lat_max, 
+                lon_0=self._center_lng, lat_0=self._center_lat)
+
+        for feat in self.feats_arr: 
+            if len(feat.shape) == 3:
+                rows, cols = feat.shape[1], feat.shape[2]
+                feat = feat.reshape(rows, cols)
+            if len(feat.shape) > 1: 
+                poly = self.geo_map(feat[:, 0], feat[:, 1])
+                self.geo_map.plot(poly[0], poly[1])
