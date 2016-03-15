@@ -1,8 +1,12 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
+import fiona
+import numpy as np
 
 
-class USMap(): 
+class USMap(object): 
     """This docstring will describe how to interact with the USMap class. 
 
     This class will instantiate and create a US map (built on top of a 
@@ -25,7 +29,13 @@ class USMap():
         self._initialize_map(shapefile_path)
 
     def _initialize_map(self, shapefile_path): 
-        """Initalize the Basemap that holds the US map of counties."""
+        """Initalize the Basemap that holds the US map of counties.
+        
+        Args
+        ----
+            shapefile_path: str
+                Holds the pathname to the shapefile for the map
+        """
 
         fig = plt.figure(figsize=(20, 10))
         self.geo_map = Basemap(projection='aea', width=4750000, height=3500000, 
@@ -33,7 +43,7 @@ class USMap():
                     lon_2 = -65., lon_0 = -97.5)
         self.geo_map.readshapefile(shapefile_path, self.geo_level)
 
-class Statemap(USMap): 
+class Statemap(): 
     """This docstring will describe how to interact with the Statemap class. 
 
     this class will take the instantiated usmap from the usmap class, and then 
@@ -69,8 +79,29 @@ class Statemap(USMap):
             'Wyoming': '56'}
 
     def __init__(self, shapefile_path, geo_level, state_name): 
-        pass
+        self.state_name = state_name
+        self.state_fips = fips_dict[self.state_name]
+        self.geo_level = geo_level
+        self._initialize_map(shapefile_path)
+        self.lat_pnts = []
+        self.lng_pnts = []
+
+    def self._initialize_map(self, shapefile_path): 
+        """Initalize the Basemap that holds the state map of counties.
+
+        Args: 
+        ----
+            shapefile_path: str
+                Holds a path to the shapefile that the map will be built
+                on top of. 
+        """
         
+        src = fiona.open(shapefile_path)
+        self._parse_to_state(src)
+
+    def _parse_to_state(self, src): 
+        """Filter the USMap down to a state map now."""
+        pass
 
 
 
