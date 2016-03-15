@@ -98,10 +98,51 @@ class Statemap():
         
         src = fiona.open(shapefile_path)
         self._parse_to_state(src)
+        self._calc_bounds()
 
     def _parse_to_state(self, src): 
         """Filter the USMap down to a state map now."""
+
+        feats = [feature for feat in src for feature in \
+                self._parse_feat(feat['geometry']['coordinates']) if \
+                feat['properties']['STATEFP'] == self.state_fips]
+        self.feats_arr = np.array(feats)
+
+    def _parse_feat(self, feature): 
+        """Parse a feature and grab the relevant parts. 
+
+        For any feature that comes in, we need to consider it's 
+        latitude and longitude points, and find the overall min/max. 
+        latitude/longitude across all points. We'll use this to get the
+        correct sizing of the end basemap that we want to plot. 
+
+        Args: 
+        ----
+            feat: list
+        """
+
+        output_feats = []
+        for feat in feature: 
+            feat_arr = np.array(feat)
+            output_feats.append(feat) 
+            # Here is where we keep track of the min/max. of the lat/long. 
+            # for this particular feature. 1 or two features have shape 
+            # with only 1 element, and we can safely ignore those here. 
+            if len(feat_arr.shape) > 1: 
+                lng_pts_arr = feat_arr[np.where(feat_arr[:, 0] < 0)]
+                lat_pts_arr = feat_arr[np.where(feat_arr[:, 1] > 0)]
+                self.lng_pts.extend([lng_pts_arr[:, 0].max(), 
+                    lng_pts_arr[:, 0].min()])
+                self.lat_pts.extend([lat_pts_arr[:, 1].max(), 
+                    lat_pts_arr[:, 1].min()])
+
+        return output_feats
+
+    def _calc_bounds(self): 
+        """This will calculate the bounds/stipulations of our map. 
+        
+        Here, we'll calculate the lat/long of the corners of our map, 
+        as well as the lat/long bounds of the map. We'll also calculate 
+        where the center of the map needs to be. 
+        """
         pass
-
-
-
