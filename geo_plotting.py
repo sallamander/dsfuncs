@@ -205,6 +205,15 @@ class StateMap(object):
                 poly = self.geo_map(feat[:, 0], feat[:, 1])
                 self.geo_map.plot(poly[0], poly[1])
 
+    def plot_points(self, points): 
+        """Plot the inputted points on the self.geo_map stored on the class
+
+        Args: 
+            points: iterable of lat/long pairs (either numpy.ndarray or list)
+        """
+        pass
+
+
 class CountyMap(StateMap):
     """This docstring will describe how to interact with the CountyMap class
 
