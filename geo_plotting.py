@@ -186,7 +186,7 @@ class StateMap(object):
         # the last give additional bounds to the box and where to center it. 
         self.geo_map = Basemap(llcrnrlon=self._lng_min - 1,
                 llcrnrlat=self._lat_min - 1, urcrnrlon=self._lng_max + 1,
-                urcrnrlat=self._lat_max + 1, resolution='l', projection='aea',
+                urcrnrlat=self._lat_max + 1, resolution='h', projection='aea',
                 lat_1=self._lat_min, lat_2=self._lat_max, 
                 lon_1=self._lng_min, lon_2=self._lng_max, 
                 lon_0=self._center_lng, lat_0=self._center_lat)
@@ -223,4 +223,40 @@ class CountyMap(StateMap):
         state_name: str
         county_name: str
     """
-    pass
+
+    def __init__(self, shapefile_path, state_name, county_name): 
+        self.state_name = state_name
+        self.county_name = county_name
+        self.state_fips = self.fips_dict[self.state_name]
+        self.lat_pts = []
+        self.lng_pts = []
+        self.coord_paths_lst = []
+        self._initialize_map(shapefile_path)
+
+    def _initialize_map(self, shapefile_path): 
+        """Initalize the Basemap that holds the state map of counties.
+
+        Args: 
+        ----
+            shapefile_path: str
+                Holds a path to the shapefile that the map will be built
+                on top of. 
+        """
+        
+        src = fiona.open(shapefile_path)
+        self._parse_to_county(src)
+        self._calc_bounds()
+        self._create_map()
+        self._plot_map()
+
+    def _parse_to_county(self, src): 
+        """Filter the USMap down to a state map now."""
+
+        for feature in src: 
+            if feature['properties']['STATEFP'] == self.state_fips and \
+                feature['properties']['NAME'] == self.county_name: 
+                # This will return the coordinate paths that make
+                # up a geometry (county here). 
+                lst_of_paths = feature['geometry']['coordinates']
+                for coord_path in self._parse_lst_of_paths(lst_of_paths): 
+                    self.coord_paths_lst.append(coord_path)
