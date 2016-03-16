@@ -43,7 +43,7 @@ class USMap(object):
                     lon_2 = -65., lon_0 = -97.5)
         self.geo_map.readshapefile(shapefile_path, self.geo_level)
 
-class StateMap(): 
+class StateMap(object): 
     """This docstring will describe how to interact with the Statemap class. 
 
     this class will take the instantiated usmap from the usmap class, and then 
@@ -54,9 +54,6 @@ class StateMap():
         shapefile_path: str
             holds a path to the shapefile that the map will be built on 
             top of. 
-        geo_level: str
-            holds the geographical level of granularity (state, county, etc.)
-            that is in the inputted shapefile_path. 
         state_name: str
     """
 
@@ -208,3 +205,22 @@ class StateMap():
                 poly = self.geo_map(feat[:, 0], feat[:, 1])
                 self.geo_map.plot(poly[0], poly[1])
 
+class CountyMap(StateMap):
+    """This docstring will describe how to interact with the CountyMap class
+
+    This CountyMap class will filter out the inputted GIS data down to 
+    the inputted state and county, and then build a Basemap using the 
+    GIS boundary for that county. It will obtain almost all of it's 
+    functionality from the StateMap class that it inherits from, but 
+    will override _initalize_map method and replace the _parse_to_state
+    with _parse_to_county. 
+
+    parameters: 
+    -----------
+        shapefile_path: str
+            holds a path to the shapefile that the map will be built on 
+            top of. 
+        state_name: str
+        county_name: str
+    """
+    pass
