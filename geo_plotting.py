@@ -78,12 +78,12 @@ class StateMap():
             'Washington': '53', 'West Virginia': '54', 'Wisconsin': '55', 
             'Wyoming': '56'}
 
-    def __init__(self, shapefile_path, geo_level, state_name): 
+    def __init__(self, shapefile_path, state_name): 
         self.state_name = state_name
         self.state_fips = self.fips_dict[self.state_name]
-        self.geo_level = geo_level
         self.lat_pts = []
         self.lng_pts = []
+        self.coord_paths_lst = []
         self._initialize_map(shapefile_path)
 
     def _initialize_map(self, shapefile_path): 
@@ -100,45 +100,66 @@ class StateMap():
         self._parse_to_state(src)
         self._calc_bounds()
         self._create_map()
+        self._plot_map()
 
     def _parse_to_state(self, src): 
         """Filter the USMap down to a state map now."""
 
-        feats=[]
-        for feat in src: 
-            if feat['properties']['STATEFP'] == self.state_fips:  
-                features = feat['geometry']['coordinates']
-                for feat in features: 
-                    feat_arr = np.array(feat)
-                    feats.append(feat_arr)
-                    # The couple that are 1d cause issues. 
-                    if len(feat_arr.shape) > 1: 
-                        self._parse_feat(feat_arr)
+        for feature in src: 
+            if feature['properties']['STATEFP'] == self.state_fips:  
+                # This will return the coordinate paths that make
+                # up a geometry (county here). 
+                lst_of_paths = feature['geometry']['coordinates']
+                for coord_path in self._parse_lst_of_paths(lst_of_paths): 
+                    self.coord_paths_lst.append(coord_path)
 
-        self.feats_arr = np.array(feats)
+    def _parse_lst_of_paths(self, lst_of_paths): 
+        """Parse a list of coordinate paths. 
 
-    def _parse_feat(self, feat_arr): 
-        """Parse a feature and grab the relevant parts. 
-
-        For any feature that comes in, we need to consider it's 
-        latitude and longitude points, and find the overall min/max. 
-        latitude/longitude across all points. We'll use this to get the
-        correct sizing of the end basemap that we want to plot. 
+        For any lst_of_paths that comes in, there will be a bunch of 
+        coordinate paths that we want to look at and do a couple of 
+        things with. First off is that we'll want to actually store
+        that coordinate path to map it later. We'll also want to 
+        store the maximum/minimum longitude and latitude so that we 
+        can get the correct sizing of our plot (although this will 
+        occur in the _parse_coord_path) method. 
 
         Args: 
         ----
-            feat: list
+            lst_of_paths: list 
         """
 
-        # Here is where we keep track of the min/max. of the lat/long. 
-        # for this particular feature. 1 or two features have shape 
-        # with only 1 element, and we can safely ignore those here. 
-        lng_pts_arr = feat_arr[np.where(feat_arr[:, 0] < 0)]
-        lat_pts_arr = feat_arr[np.where(feat_arr[:, 1] > 0)]
-        self.lng_pts.extend([lng_pts_arr[:, 0].max(), 
-            lng_pts_arr[:, 0].min()])
-        self.lat_pts.extend([lat_pts_arr[:, 1].max(), 
-            lat_pts_arr[:, 1].min()])
+        for coord_path in lst_of_paths: 
+            coord_path_arr = np.array(coord_path)
+            if len(coord_path_arr.shape) > 1: 
+                self._parse_coord_path(coord_path_arr)
+            yield np.array(coord_path)
+
+    def _parse_coord_path(self, coord_path_arr): 
+        """Parse a coordinate path. 
+
+        Here we'll actually grab the maximum and minimum latitudes
+        and longitudes that we can find in this particular coordinate
+        path. 
+
+        Args: 
+        ----
+            coord_path_arr: numpy.ndarray
+        """
+        # For a couple of points, the long is switched with the
+        # lat., and so we have to filter those out first. Since
+        # we're in the US, we know that this will be restricted 
+        # to negative longitudes, and positive latitudes. 
+        lng_pts_mask = np.where(coord_path_arr[:, 0] < 0)
+        lat_pts_mask = np.where(coord_path_arr[:, 1] > 0)
+
+        lng_pts_arr = coord_path_arr[lng_pts_mask][:, 0]
+        lat_pts_arr = coord_path_arr[lat_pts_mask][:, 1]
+
+        lng_min, lng_max = lng_pts_arr.min(), lng_pts_arr.max()
+        lat_min, lat_max = lat_pts_arr.min(), lat_pts_arr.max()
+        self.lng_pts.extend([lng_min, lng_max])
+        self.lat_pts.extend([lat_min, lat_max])
 
     def _calc_bounds(self): 
         """This will calculate the bounds/stipulations of our map. 
@@ -150,13 +171,17 @@ class StateMap():
 
         lng_pts_arr = np.array(self.lng_pts)
         lat_pts_arr = np.array(self.lat_pts)
+        
+        # In _parse_coord_path, we were looking for the local min/max of 
+        # the lat/long. in a coordinate path. Here we're getting it globally
+        # across all paths that are included in this map. 
         self._lat_min, self._lat_max = lat_pts_arr.min(), lat_pts_arr.max()
         self._lng_min, self._lng_max = lng_pts_arr.min(), lng_pts_arr.max()
         self._center_lng = (self._lng_max - self._lng_min) / 2 + self._lng_min
         self._center_lat = (self._lat_max - self._lat_min) / 2 + self._lat_min
 
     def _create_map(self): 
-        """Build the map of the inputted state."""
+        """Initialize the map of the inputted state."""
 
         fig = plt.figure(figsize=(20, 10))
         # The first four arguments define the bounds of the box, with a 
@@ -168,8 +193,11 @@ class StateMap():
                 lat_1=self._lat_min, lat_2=self._lat_max, 
                 lon_1=self._lng_min, lon_2=self._lng_max, 
                 lon_0=self._center_lng, lat_0=self._center_lat)
+    
+    def _plot_map(self): 
+        """Plot the paths on the initialized map."""
 
-        for feat in self.feats_arr: 
+        for feat in self.coord_paths_lst: 
             # Even though I put the data into 2D format before using it,
             # there were still a couple of 3D data points that lead to issues.
             # Ignoring them didn't seem to cause any problems. 
@@ -179,3 +207,4 @@ class StateMap():
             if len(feat.shape) > 1: 
                 poly = self.geo_map(feat[:, 0], feat[:, 1])
                 self.geo_map.plot(poly[0], poly[1])
+
