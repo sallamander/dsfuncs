@@ -186,7 +186,7 @@ class StateMap(object):
         # the last give additional bounds to the box and where to center it. 
         self.geo_map = Basemap(llcrnrlon=self._lng_min - 1,
                 llcrnrlat=self._lat_min - 1, urcrnrlon=self._lng_max + 1,
-                urcrnrlat=self._lat_max + 1, resolution='h', projection='aea',
+                urcrnrlat=self._lat_max + 1, resolution='l', projection='aea',
                 lat_1=self._lat_min, lat_2=self._lat_max, 
                 lon_1=self._lng_min, lon_2=self._lng_max, 
                 lon_0=self._center_lng, lat_0=self._center_lat)
@@ -209,10 +209,16 @@ class StateMap(object):
         """Plot the inputted points on the self.geo_map stored on the class
 
         Args: 
-            points: iterable of lat/long pairs (either numpy.ndarray or list)
+            points: iterable of lat/long/color pairs 
+                The input here should be an iterable, where each item contains
+                the lat/long of a point to plot, along with the color of the
+                marker that should be used to plot it. 
         """
-        pass
 
+        for point in points: 
+            lon, lat, marker = point[0], point[1], point[2]
+            x, y = self.geo_map(lon, lat)
+            self.geo_map.plot(x, y, marker, markersize=8)
 
 class CountyMap(StateMap):
     """This docstring will describe how to interact with the CountyMap class
