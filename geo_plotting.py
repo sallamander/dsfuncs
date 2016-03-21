@@ -22,10 +22,13 @@ class USMap(object):
         geo_level: str
             holds the geographical level of granularity (state, county, etc.)
             that is in the inputted shapefile_path. 
+        figsize: tuple
+            holds the size of the map figure that we want to generate 
     """
 
-    def __init__(self, shapefile_path, geo_level): 
+    def __init__(self, shapefile_path, geo_level, figsize=(10, 10)): 
         self.geo_level = geo_level 
+        self.figsize = figsize
         self._initialize_map(shapefile_path)
 
     def _initialize_map(self, shapefile_path): 
@@ -37,11 +40,11 @@ class USMap(object):
                 Holds the pathname to the shapefile for the map
         """
 
-        fig = plt.figure(figsize=(20, 10))
+        fig = plt.figure(figsize=self.figsize)
         self.geo_map = Basemap(projection='aea', width=4750000, height=3500000, 
                     lat_1=24.,lat_2=55.,lat_0=38.5,lon_1=-125., 
                     lon_2 = -65., lon_0 = -97.5)
-        self.geo_map.readshapefile(shapefile_path, self.geo_level)
+        self.geo_map.readshapefile(shapefile_path, self.geo_level, color='black')
 
 class StateMap(object): 
     """This docstring will describe how to interact with the Statemap class. 
@@ -54,7 +57,9 @@ class StateMap(object):
         shapefile_path: str
             holds a path to the shapefile that the map will be built on 
             top of. 
-        state_name: str
+        state_names: set (or other iterable) 
+        ax: matplot.pyplot.Axes
+            optional axis passed in to plot on 
     """
 
     fips_dict = {'Alabama': '01', 'Alaska': '02', 'Arizona': '04', 
@@ -75,12 +80,18 @@ class StateMap(object):
             'Washington': '53', 'West Virginia': '54', 'Wisconsin': '55', 
             'Wyoming': '56'}
 
-    def __init__(self, shapefile_path, state_name): 
-        self.state_name = state_name
-        self.state_fips = self.fips_dict[self.state_name]
+    def __init__(self, shapefile_path, state_names, source='State', ax=None, 
+            figsize=None, border_padding=1): 
+        self.state_names = set(state_names)
+        self.state_fips = set(self.fips_dict[state_name] for state_name \
+                in self.state_names)
         self.lat_pts = []
         self.lng_pts = []
         self.coord_paths_lst = []
+        self.source = source
+        self.ax = ax
+        self.figsize = figsize
+        self.border_padding = border_padding
         self._initialize_map(shapefile_path)
 
     def _initialize_map(self, shapefile_path): 
@@ -98,12 +109,13 @@ class StateMap(object):
         self._calc_bounds()
         self._create_map()
         self._plot_map()
+        src.close()
 
     def _parse_to_state(self, src): 
         """Filter the USMap down to a state map now."""
 
         for feature in src: 
-            if feature['properties']['STATEFP'] == self.state_fips:  
+            if feature['properties']['STATEFP'] in self.state_fips:  
                 # This will return the coordinate paths that make
                 # up a geometry (county here). 
                 lst_of_paths = feature['geometry']['coordinates']
@@ -125,6 +137,11 @@ class StateMap(object):
         ----
             lst_of_paths: list 
         """
+
+        if self.source == 'State': 
+            lst_of_paths = np.array(lst_of_paths)
+            if lst_of_paths.shape[0] > 1: 
+                lst_of_paths= lst_of_paths.flatten()
 
         for coord_path in lst_of_paths: 
             coord_path_arr = np.array(coord_path)
@@ -180,16 +197,19 @@ class StateMap(object):
     def _create_map(self): 
         """Initialize the map of the inputted state."""
 
-        fig = plt.figure(figsize=(20, 10))
         # The first four arguments define the bounds of the box, with a 
         # padding of plus one. The next two are some standard specs., and 
         # the last give additional bounds to the box and where to center it. 
-        self.geo_map = Basemap(llcrnrlon=self._lng_min - 1,
-                llcrnrlat=self._lat_min - 1, urcrnrlon=self._lng_max + 1,
-                urcrnrlat=self._lat_max + 1, resolution='l', projection='aea',
+        if self.figsize and not self.ax: 
+            fig = plt.figure(figsize=self.figsize)
+        self.geo_map = Basemap(llcrnrlon=self._lng_min - self.border_padding,
+                llcrnrlat=self._lat_min - self.border_padding, 
+                urcrnrlon=self._lng_max + self.border_padding,
+                urcrnrlat=self._lat_max + self.border_padding, 
+                resolution='l', projection='aea',
                 lat_1=self._lat_min, lat_2=self._lat_max, 
                 lon_1=self._lng_min, lon_2=self._lng_max, 
-                lon_0=self._center_lng, lat_0=self._center_lat)
+                lon_0=self._center_lng, lat_0=self._center_lat, ax=self.ax)
     
     def _plot_map(self): 
         """Plot the paths on the initialized map."""
@@ -203,7 +223,7 @@ class StateMap(object):
                 feat = feat.reshape(rows, cols)
             if len(feat.shape) > 1: 
                 poly = self.geo_map(feat[:, 0], feat[:, 1])
-                self.geo_map.plot(poly[0], poly[1])
+                self.geo_map.plot(poly[0], poly[1], color='black')
 
     def plot_points(self, points): 
         """Plot the inputted points on the self.geo_map stored on the class
@@ -219,6 +239,18 @@ class StateMap(object):
             lon, lat, marker = point[0], point[1], point[2]
             x, y = self.geo_map(lon, lat)
             self.geo_map.plot(x, y, marker, markersize=8)
+
+    def plot_boundary(self, boundaries): 
+        """Plot the inputted boundary on the initialized map."""
+
+        for feat in boundaries: 
+            feat = np.array(feat)
+            if len(feat.shape) == 3:
+                rows, cols = feat.shape[1], feat.shape[2]
+                feat = feat.reshape(rows, cols)
+            if len(feat.shape) > 1 and feat.shape[1] != 1: 
+                poly = self.geo_map(feat[:, 0], feat[:, 1])
+                self.geo_map.plot(poly[0], poly[1], color='blue')
 
 class CountyMap(StateMap):
     """This docstring will describe how to interact with the CountyMap class
@@ -236,16 +268,23 @@ class CountyMap(StateMap):
             holds a path to the shapefile that the map will be built on 
             top of. 
         state_name: str
-        county_name: str
+        county_names: set (or other iterable) of counties to plot 
+        ax: matplot.pyplot.Axes
+            optional axis passed in to plot on 
     """
 
-    def __init__(self, shapefile_path, state_name, county_name): 
+    def __init__(self, shapefile_path, state_name, county_names, ax=None, 
+            figsize=None, border_padding=0.2, source='County'): 
         self.state_name = state_name
-        self.county_name = county_name
+        self.county_names = set(county_names)
         self.state_fips = self.fips_dict[self.state_name]
         self.lat_pts = []
         self.lng_pts = []
         self.coord_paths_lst = []
+        self.ax = ax
+        self.figsize = figsize
+        self.border_padding = border_padding
+        self.source = source
         self._initialize_map(shapefile_path)
 
     def _initialize_map(self, shapefile_path): 
@@ -269,7 +308,7 @@ class CountyMap(StateMap):
 
         for feature in src: 
             if feature['properties']['STATEFP'] == self.state_fips and \
-                feature['properties']['NAME'] == self.county_name: 
+                feature['properties']['NAME'] in self.county_names: 
                 # This will return the coordinate paths that make
                 # up a geometry (county here). 
                 lst_of_paths = feature['geometry']['coordinates']
