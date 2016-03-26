@@ -75,21 +75,32 @@ def _plot_continuous_var_dist(var_data, ax, show):
     if ax is not None: 
         var_data.plot(kind='box', ax=ax[0])
         ax[0].set_title('With Outliers')
+        sns.distplot(var_data, bins=20, ax=ax[1])
+        ax[1].set_title('With Outliers')
     else: 
-        ax = plt.subplot(1, 2, 1)
+        ax = plt.subplot(1, 4, 1)
         var_data.plot(kind='box')
+        ax.set_title('With Outliers')
+        ax = plt.subplot(1, 4, 2)
+        sns.distplot(var_data, bins=20, ax=ax)
         ax.set_title('With Outliers')
 
     var_data_wo_outliers = remove_outliers(var_data)
     # Plot the data without outliers. 
     if ax is not None: 
-        var_data_wo_outliers.plot(kind='box', ax=ax[1])
-        ax[1].set_title('Without outliers')
+        var_data_wo_outliers.plot(kind='box', ax=ax[2])
+        ax[2].set_title('Without outliers')
+        sns.distplot(var_data_wo_outliers, bins=20, ax=ax[3])
+        ax[3].set_title('Without Outliers')
     else: 
-        ax = plt.subplot(1, 2, 2)
+        ax = plt.subplot(1, 4, 3)
         var_data_wo_outliers.plot(kind='box')
         ax.set_title('Without outliers')
+        ax = plt.subplot(1, 4, 4)
+        sns.distplot(var_data_wo_outliers, bins=20, ax=ax)
+        ax.set_title('Without outliers')
     
+
     if show: 
         plt.show()
 
