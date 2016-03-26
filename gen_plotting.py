@@ -74,8 +74,7 @@ def _plot_continuous_var_dist(var_data, ax, show):
     # Plot the data with outliers. 
     if ax is not None: 
         _plot_box(var_data, ax[0], outliers=True)
-        sns.distplot(var_data, bins=20, ax=ax[1])
-        ax[1].set_title('With Outliers')
+        _plot_hist_kde(var_data, ax[1], outliers=True)
     else: 
         ax = plt.subplot(1, 4, 1)
         var_data.plot(kind='box')
@@ -88,8 +87,7 @@ def _plot_continuous_var_dist(var_data, ax, show):
     # Plot the data without outliers. 
     if ax is not None: 
         _plot_box(var_data_wo_outliers, ax[2], outliers=False)
-        sns.distplot(var_data_wo_outliers, bins=20, ax=ax[3])
-        ax[3].set_title('Without Outliers')
+        _plot_hist_kde(var_data, ax[3], outliers=False)
     else: 
         ax = plt.subplot(1, 4, 3)
         var_data_wo_outliers.plot(kind='box')
@@ -116,6 +114,22 @@ def _plot_box(var_data, ax, outliers=True):
     else: 
         ax = plt.subplot(1, 1, 1)
         var_data.plot(kind='box', ax=ax)
+        ax.set_title('With Outliers')
+
+def _plot_hist_kde(var_data, ax, outliers=True): 
+    """Plot a histogram/kde with the continuous variable data inputted. 
+
+    Args: 
+        var_data: 1d numpy.ndarray
+    """
+
+    title = "With Outliers" if outliers else "Without outliers"
+    if ax is not None: 
+        sns.distplot(var_data, bins=20, ax=ax)
+        ax.set_title(title)
+    else: 
+        ax = plt.subplot(1, 1, 1)
+        sns.distplot(var_data, bins=20, ax=ax)
         ax.set_title('With Outliers')
 
 def plot_binary_response(df, categorical, response): 
