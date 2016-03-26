@@ -1,3 +1,19 @@
+"""A fairly basic set of tools for plotting the distributions 
+of variables. 
+
+Only two functions here are meant to be called externally, while 
+the rest are used internally. `plot_dist_var` and 
+`plot_binary_response` are those two. 
+
+The former plots the distribution of an inputted categorical or 
+continuous variable. If categorical, it creates a bar plot with the 
+heights equal to the percentage of each category. If continuous, 
+it creates 4 plots - a box and then hist/kde with and without outliers. 
+The latter creates a bar plot for a categorical variable, with 
+the heights equal to the percentage of each category, but with the  
+bar text equal to percentage of True's in a response variable. 
+"""
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd

@@ -1,3 +1,3 @@
 import processing
-import gen_plotting
+import dist_plotting
 import geo_plotting
