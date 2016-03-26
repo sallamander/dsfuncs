@@ -5,7 +5,7 @@ from itertools import izip
 
 from .processing import remove_outliers
 
-def plot_var_dist(var_data, categorical=False, ax=None, show=True): 
+def plot_var_dist(var_data, categorical, show=True, ax=None): 
     """Plot the distribution of the inputted variable data. 
 
     Given the inputted data, plot the distribution of the data
@@ -14,6 +14,13 @@ def plot_var_dist(var_data, categorical=False, ax=None, show=True):
     Args: 
         var_data: 1d numpy.ndarray
         categorical: bool
+        show (optional): bool 
+            Whether or not to show the plot. Defaults to True. 
+        ax (optional): matplotlib.pylot.Axes object(s)
+            Axes to plot the following plots on. Current usage 
+            expects that if it is passed in, this axes object 
+            contains 4 individual axes to plot on - 1 each for 
+            a boxplot and hist/kde both with and without outliers.  
     """
 
     if not categorical: 
@@ -23,9 +30,16 @@ def plot_var_dist(var_data, categorical=False, ax=None, show=True):
 
 def _plot_categorical_var_dist(var_data, ax, show): 
     """Plot a boxplot of the continuous variable data inputted. 
+    
+    This is a helper function called from plot_var_dist. It'll 
+    be used in the case that categorical data is passed in. 
 
     Args: 
         var_data: 1d numpy.ndarray
+        ax: matplotlib.pyplot.Axes object 
+            This may or may not be None, depending on what 
+            was passed from plot_var_dist. 
+        show: bool 
     """
 
     var_data_counts = var_data.value_counts()
@@ -67,70 +81,73 @@ def _plot_continuous_var_dist(var_data, ax, show):
     """Plot a boxplot of the continuous variable data inputted, both with 
     and without outliers. 
 
+    This is a helper function called from plot_var_dist. It'll 
+    be used in the case that continuous data is passed in. 
+
     Args: 
         var_data: 1d numpy.ndarray
+        ax: matplotlib.pyplot.Axes object 
+            This may or may not be None, depending on what 
+            was passed from plot_var_dist. If it is None, 
+            then we'll build a set of 4 axes with no given 
+            figure size and run with it. The idea is that this 
+            will be used to plot both a box and hist/kde with 
+            and without outliers.
+        show: bool 
     """
-
+   
+    if ax is None: 
+        f, ax = plt.subplots(1, 4)
+    
     # Plot the data with outliers. 
-    if ax is not None: 
-        _plot_box(var_data, ax[0], outliers=True)
-        _plot_hist_kde(var_data, ax[1], outliers=True)
-    else: 
-        ax = plt.subplot(1, 4, 1)
-        var_data.plot(kind='box')
-        ax.set_title('With Outliers')
-        ax = plt.subplot(1, 4, 2)
-        sns.distplot(var_data, bins=20, ax=ax)
-        ax.set_title('With Outliers')
+    _plot_box(var_data, ax[0], outliers=True)
+    _plot_hist_kde(var_data, ax[1], outliers=True)
 
     var_data_wo_outliers = remove_outliers(var_data)
+
     # Plot the data without outliers. 
-    if ax is not None: 
-        _plot_box(var_data_wo_outliers, ax[2], outliers=False)
-        _plot_hist_kde(var_data, ax[3], outliers=False)
-    else: 
-        ax = plt.subplot(1, 4, 3)
-        var_data_wo_outliers.plot(kind='box')
-        ax.set_title('Without outliers')
-        ax = plt.subplot(1, 4, 4)
-        sns.distplot(var_data_wo_outliers, bins=20, ax=ax)
-        ax.set_title('Without outliers')
-    
+    _plot_box(var_data_wo_outliers, ax[2], outliers=False)
+    _plot_hist_kde(var_data, ax[3], outliers=False)
 
     if show: 
         plt.show()
 
 def _plot_box(var_data, ax, outliers=True): 
-    """Plot a boxplot of the continuous variable data inputted
+    """Plot a boxplot of the continuous variable data inputted. 
+
+    This is a helper function called from _plot_continuous_var_dist, 
+    used for plotting a box plot of the continuous variable data. 
 
     Args: 
         var_data: 1d numpy.ndarray
+        ax: matplotlib.pyplot.Axes object
+        outliers (optional): bool
+            This helps us determine what the title for the 
+            plot will be. 
     """
 
     title = "With Outliers" if outliers else "Without outliers"
-    if ax is not None: 
-        var_data.plot(kind='box', ax=ax)
-        ax.set_title(title)
-    else: 
-        ax = plt.subplot(1, 1, 1)
-        var_data.plot(kind='box', ax=ax)
-        ax.set_title('With Outliers')
+
+    var_data.plot(kind='box', ax=ax)
+    ax.set_title(title)
 
 def _plot_hist_kde(var_data, ax, outliers=True): 
     """Plot a histogram/kde with the continuous variable data inputted. 
 
+    This is a helper function called from _plot_continuous_var_dist, 
+    used for plotting a box plot of the continuous variable data. 
+
     Args: 
         var_data: 1d numpy.ndarray
+        ax: matplotlib.pyplot.Axes object
+        outliers (optional): bool
+            This helps us determine what the title for the 
+            plot will be. 
     """
 
     title = "With Outliers" if outliers else "Without outliers"
-    if ax is not None: 
-        sns.distplot(var_data, bins=20, ax=ax)
-        ax.set_title(title)
-    else: 
-        ax = plt.subplot(1, 1, 1)
-        sns.distplot(var_data, bins=20, ax=ax)
-        ax.set_title('With Outliers')
+    sns.distplot(var_data, bins=20, ax=ax)
+    ax.set_title(title)
 
 def plot_binary_response(df, categorical, response): 
     """Plot the percentage of a True/False binary response across
