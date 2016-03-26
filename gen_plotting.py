@@ -73,8 +73,7 @@ def _plot_continuous_var_dist(var_data, ax, show):
 
     # Plot the data with outliers. 
     if ax is not None: 
-        var_data.plot(kind='box', ax=ax[0])
-        ax[0].set_title('With Outliers')
+        _plot_box(var_data, ax[0], outliers=True)
         sns.distplot(var_data, bins=20, ax=ax[1])
         ax[1].set_title('With Outliers')
     else: 
@@ -88,8 +87,7 @@ def _plot_continuous_var_dist(var_data, ax, show):
     var_data_wo_outliers = remove_outliers(var_data)
     # Plot the data without outliers. 
     if ax is not None: 
-        var_data_wo_outliers.plot(kind='box', ax=ax[2])
-        ax[2].set_title('Without outliers')
+        _plot_box(var_data_wo_outliers, ax[2], outliers=False)
         sns.distplot(var_data_wo_outliers, bins=20, ax=ax[3])
         ax[3].set_title('Without Outliers')
     else: 
@@ -103,6 +101,22 @@ def _plot_continuous_var_dist(var_data, ax, show):
 
     if show: 
         plt.show()
+
+def _plot_box(var_data, ax, outliers=True): 
+    """Plot a boxplot of the continuous variable data inputted
+
+    Args: 
+        var_data: 1d numpy.ndarray
+    """
+
+    title = "With Outliers" if outliers else "Without outliers"
+    if ax is not None: 
+        var_data.plot(kind='box', ax=ax)
+        ax.set_title(title)
+    else: 
+        ax = plt.subplot(1, 1, 1)
+        var_data.plot(kind='box', ax=ax)
+        ax.set_title('With Outliers')
 
 def plot_binary_response(df, categorical, response): 
     """Plot the percentage of a True/False binary response across
