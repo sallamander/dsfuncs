@@ -240,17 +240,11 @@ class StateMap(object):
             x, y = self.geo_map(lon, lat)
             self.geo_map.plot(x, y, marker, markersize=8)
 
-    def plot_boundary(self, boundaries): 
+    def plot_boundary(self, filepath): 
         """Plot the inputted boundary on the initialized map."""
 
-        for feat in boundaries: 
-            feat = np.array(feat)
-            if len(feat.shape) == 3:
-                rows, cols = feat.shape[1], feat.shape[2]
-                feat = feat.reshape(rows, cols)
-            if len(feat.shape) > 1 and feat.shape[1] != 1: 
-                poly = self.geo_map(feat[:, 0], feat[:, 1])
-                self.geo_map.plot(poly[0], poly[1], color='blue')
+        self.geo_map.readshapefile(filepath, name='Filepath boundaries', color='blue')
+
 
 class CountyMap(StateMap):
     """This docstring will describe how to interact with the CountyMap class
