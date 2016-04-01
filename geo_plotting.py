@@ -15,7 +15,7 @@ class USMapBuilder(object):
             'Connecticut': '09', 'Deleware': '10', 
             'District of Columbia': '11', 'Florida': '12', 'Georgia': '13', 
             'Hawaii': '15', 'Idaho': '16', 'Illinois': '17', 'Indiana': '18', 
-            'Iowa': '19' , 'Kansas': '20', 'Kentucky': '21', 'Lousiana': '22',
+            'Iowa': '19' , 'Kansas': '20', 'Kentucky': '21', 'Louisiana': '22',
             'Maine': '23', 'Maryland': '24', 'Massachusetts': '25', 
             'Michigan': '26', 'Minnesota': '27', 'Mississippi': '28', 
             'Missouri': '29', 'Montana': '30', 'Nebraska': '31', 
@@ -25,12 +25,32 @@ class USMapBuilder(object):
             'Oregon': '41', 'Pennsylvania': '42', 'Rhode Island': '44', 
             'South Carolina': '45', 'South Dakota': '46', 'Tennessee': '47', 
             'Texas': '48', 'Utah': '49', 'Vermont': '50', 'Virgina': '51', 
-            'Washington': '53', 'West Virginia': '54', 'Wisconsin': '55', 
+            'Washington': '53', 'West Virgina': '54', 'Wisconsin': '55', 
             'Wyoming': '56'}
 
-    def __init__(self, shapefile_path, geo_level=None, state_names=None, 
-            county_names=None, figsize=None, border_padding=1,
-            ax=None): 
+    regions_dict = {'West': {'Washington', 'Montana', 'Idaho', 'Wyoming', 
+                            'Colorado', 'Utah', 'Nevada', 'California', 
+                            'Oregon'}, 
+                    'Southwest': {'Arizona', 'New Mexico', 'Texas', 
+                            'Oklahoma'}, 
+                    'Midwest': {'North Dakota', 'South Dakota', 'Nebraska', 
+                                'Kansas', 'Missouri', 'Iowa', 'Minnesota', 
+                                'Wisconsin', 'Illinois', 'Indiana', 
+                                'Ohio', 'Michigan'}, 
+                    'Southeast': {'Arkansas', 'Louisiana', 'Alabama', 
+                                  'West Virgina', 'Virgina', 'Kentucky', 
+                                  'Tennessee', 'North Carolina', 
+                                  'South Carolina', 'Georgia', 'Mississippi', 
+                                  'Florida'}, 
+                    'Northeast': {'Maine', 'Massachusetts', 'Rhode Island', 
+                                  'Connecticut', 'New Hampshire', 'Vermont', 
+                                  'New York', 'Pennsylvania', 'New Jersey', 
+                                  'Deleware', 'Maryland'}
+                    }  
+
+    def __init__(self, shapefile_path, geo_level=None, region_names=None, 
+                 state_names=None, county_names=None, figsize=None, 
+                 border_padding=1, ax=None): 
         self.geo_level = 'Country' if not geo_level else geo_level
         self.figsize = figsize
         self.lat_pts = []
@@ -40,10 +60,14 @@ class USMapBuilder(object):
         self.border_padding = border_padding 
         self.ax = ax 
 
-        if self.geo_level == 'State' and state_names is None: 
+        if region_names: 
+            state_names = set(state_name for region_name in region_names \
+                    for state_name in self.regions_dict[region_name])
+        if self.geo_level == 'State' and state_names is None \
+                and region_names is None: 
             raise Exception ('Must input state names for plotting.') 
-        elif self.geo_level == 'County' and (state_names is None
-                or county_names is None): 
+        elif self.geo_level == 'County' and ((state_names is None 
+                and region_names is None) or county_names is None): 
             raise Exception ('Must input state and county names for plotting.') 
         
         if self.geo_level == 'State': 
