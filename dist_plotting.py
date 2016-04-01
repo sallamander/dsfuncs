@@ -21,7 +21,8 @@ from itertools import izip
 
 from .processing import remove_outliers
 
-def plot_var_dist(var_data, categorical, show=True, ax=None): 
+def plot_var_dist(var_data, categorical, show=True, ax=None,
+        outliers=True): 
     """Plot the distribution of the inputted variable data. 
 
     Given the inputted data, plot the distribution of the data
@@ -35,12 +36,17 @@ def plot_var_dist(var_data, categorical, show=True, ax=None):
         ax (optional): matplotlib.pylot.Axes object(s)
             Axes to plot the following plots on. Current usage 
             expects that if it is passed in, this axes object 
-            contains 4 individual axes to plot on - 1 each for 
-            a boxplot and hist/kde both with and without outliers.  
+            contains 2 or 4 individual axes to plot on - 1 each for 
+            a boxplot and hist/kde, and potentially with and without
+            outliers (depends on outliers bool parameter).   
+        outliers (optional): bool
+            Whether or not to plot both with and without outliers. 
+            If false, only plot the raw data passed in, and don't
+            plot it with outliers removed. 
     """
 
     if not categorical: 
-        _plot_continuous_var_dist(var_data, ax, show)
+        _plot_continuous_var_dist(var_data, ax, show, outliers)
     else: 
         _plot_categorical_var_dist(var_data, ax, show)
 
@@ -93,7 +99,7 @@ def _add_bar_text(ax, bars, labels):
         ax.text(idx, height, "{0:.2f}".format(label), 
                 ha='center', va='bottom', **labels_font)
 
-def _plot_continuous_var_dist(var_data, ax, show): 
+def _plot_continuous_var_dist(var_data, ax, show, outliers): 
     """Plot a boxplot of the continuous variable data inputted, both with 
     and without outliers. 
 
@@ -105,25 +111,32 @@ def _plot_continuous_var_dist(var_data, ax, show):
         ax: matplotlib.pyplot.Axes object 
             This may or may not be None, depending on what 
             was passed from plot_var_dist. If it is None, 
-            then we'll build a set of 4 axes with no given 
+            then we'll build a set of 2 or 4 axes with no given 
             figure size and run with it. The idea is that this 
-            will be used to plot both a box and hist/kde with 
-            and without outliers.
+            will be used to plot both a box and hist/kde, 
+            and potentially with and without outliers (depends
+            on the outliers bool).  
         show: bool 
+        outliers: bool
+            Denotes whether or not to plot the inputted data just
+            as is, or as is as well as with outliers removed. 
     """
    
     if ax is None: 
-        f, ax = plt.subplots(1, 4)
+        f, ax = plt.subplots(1, 4) if not outliers \
+                else plt.subplots(1, 2)
     
     # Plot the data with outliers. 
     _plot_box(var_data, ax[0], outliers=True)
     _plot_hist_kde(var_data, ax[1], outliers=True)
 
-    var_data_wo_outliers = remove_outliers(var_data)
 
-    # Plot the data without outliers. 
-    _plot_box(var_data_wo_outliers, ax[2], outliers=False)
-    _plot_hist_kde(var_data, ax[3], outliers=False)
+    if outliers: 
+        var_data_wo_outliers = remove_outliers(var_data)
+
+        # Plot the data without outliers. 
+        _plot_box(var_data_wo_outliers, ax[2], outliers=False)
+        _plot_hist_kde(var_data, ax[3], outliers=False)
 
     if show: 
         plt.show()
