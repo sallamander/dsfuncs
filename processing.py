@@ -1,3 +1,13 @@
+"""A fairly basic set of tools for data processing. 
+
+As of now, there is only one fuction in the module - 
+`remove_outliers`. 
+
+`remove_outliers` is meant to remove outliers from your
+inputted data, where outliers are defined to be so many
+standard deviations way from the mean. 
+"""
+
 import numpy as np
 
 def remove_outliers(data, std_dev_cutoff=2): 
@@ -12,6 +22,8 @@ def remove_outliers(data, std_dev_cutoff=2):
     Args: 
         data: 1d numpy.ndarray 
         std_dev_cutoff: int
+            defines how many standard deviations to go away 
+            from the mean to label outliers 
     """
 
     mean, std_dev = data.mean(), data.std()
