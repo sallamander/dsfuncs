@@ -1,3 +1,11 @@
+"""A module for geographical plotting. 
+
+This module contains classes for building geographical maps. At this 
+point in time, it only contains the USMapBuilder class, which allows for 
+the plotting of a US Map based of an inputted geography - country, 
+region, state(s), and/or county (or counties).
+
+"""
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 from matplotlib.collections import PatchCollection
@@ -6,8 +14,50 @@ import fiona
 import numpy as np
 
 class USMapBuilder(object): 
-    """This docstring will describe how to interact with the USMapBuilder
-    class.
+    """Builder for a US Map of an inputted geography. 
+
+    USMapBuilder builds a US Map of a user inputted geography. It 
+    allows for a map of the entire country, or a specified 
+    region(s), state(s), and/or county(ies). It expects that a 
+    shapefile of the state/county boundaries be passed in. It will 
+    then parse the boundary to grab the specfied geographies to plot. 
+    This allows allow for rather quick, easy geographical plotting of 
+    the US, without the need to create separate shapefiles for 
+    different boundaries. 
+
+    While any shapefile of US state/county boundaries can be 
+    passed in, the class has been tested with the boundaries found
+    at census.gov: 
+
+    https://www.census.gov/geo/maps-data/data/tiger-cart-boundary.html
+
+    Note that the shapefile needs to be in 2D format when passed in. A 
+    version of the following command was used to transfer the downloaded
+    shapefiles from 3D to 2D: 
+
+    ogr2ogr -f "ESRI Shapefile" -dim 2 output_2D.shp input_3D.shp
+
+    Args: 
+    ----
+        shapefile_path: str
+            Filepath pointing to the shapefile to read in and parse. 
+        geo_level (optional): str
+            Holds the geographical level to use for plotting 
+            ('Country', 'State', 'County'). 
+        region_names (optional): set (or other iterable) of strings 
+            Holds the regions to use in our map. 
+        state_names (optional): set (or other iterable) of strings
+            Holds the state names to use in our map. 
+        county_names (optional): set (or other iterable) of strings
+            Holds the county names to use in our map. Only relevant
+            and accessed if the `geo_level` is 'County' and  
+            `state_names` is not empty. 
+        figsize (optional): tuple of ints 
+            Holds the size of the figure to create. 
+        border_padding (optional): int 
+            Holds the amount of padding to build around the map. 
+        ax (optional): matplotlib.pyplot.Axes object 
+            Holds an axis to plot the boundaries on. 
     """
 
     fips_dict = {'Alabama': '01', 'Alaska': '02', 'Arizona': '04', 
@@ -55,7 +105,6 @@ class USMapBuilder(object):
         self.figsize = figsize
         self.lat_pts = []
         self.lng_pts = []
-        self.state_fips = set()
         self.coord_paths_lst = []
         self.border_padding = border_padding 
         self.ax = ax 
@@ -83,7 +132,23 @@ class USMapBuilder(object):
         self._build_map(shapefile_path)
 
     def _build_map(self, shapefile_path): 
-        """Build the Basemap that maps the inputted shapefile"""
+        """Build the Basemap that maps the inputted shapefile. 
+        
+        Implement all of the steps necessary for building the 
+        map of the specified geography: 
+            * Read in the shapefile
+            * Parse the boundaries in the shapefile 
+            * Calculate the boundaries/borders necessary to pass
+              to Basemap
+            * Initalize the Basemap
+            * Plot the Basemap
+
+        Args: 
+        -----
+            shapefile_path: str
+                Holds the filepath of the shapefile to read in and 
+                use for building of the Basemap. 
+        """
 
         src = fiona.open(shapefile_path)  
         self._parse_paths(src)
@@ -97,7 +162,23 @@ class USMapBuilder(object):
         src.close()
 
     def _parse_paths(self, src): 
-        """Parse the basemap paths to use only what we want to plot."""
+        """Parse the basemap paths to use only what we want to plot.
+
+        Run through each of the boundaries given in the opened 
+        shapefile passed in and grab only those that correspond 
+        to the specified geography (region, state, county). While
+        parsing, keep track of the min/max lat/long coordinates to 
+        later calculate the boundaries/borders of the Basemap with. 
+        Store these in `self.lng_pts` and `self.lat_pts`, and store
+        the parsed boundaries in `self.coord_paths_list`. 
+
+        Args: 
+        ----
+            src: fiona.collection.Collection
+                Inputted collection of boundaries that have been 
+                grabbed from the shapefile (using fiona) inputted 
+                to the class. 
+        """
         
         noncontiguous = {'02', '15', '14', '66', '60', '69' ,'72', '78'}
  
@@ -109,9 +190,10 @@ class USMapBuilder(object):
             county_mask = self.geo_level == 'County' and \
                     feature['properties']['STATEFP'] in self.state_fips and \
                     feature['properties']['NAME'] in self.county_names 
+            
             if country_mask or state_mask or county_mask:  
                 # This will return the coordinate paths that make
-                # up a geometry (county here). 
+                # up a geometry. 
                 lst_of_paths = feature['geometry']['coordinates']
                 for coord_path in self._parse_lst_of_paths(lst_of_paths): 
                     self.coord_paths_lst.append(coord_path)
@@ -119,25 +201,32 @@ class USMapBuilder(object):
     def _parse_lst_of_paths(self, lst_of_paths): 
         """Parse a list of coordinate paths. 
 
-        For any lst_of_paths that comes in, there will be a bunch of 
-        coordinate paths that we want to look at and do a couple of 
-        things with. First off is that we'll want to actually store
-        that coordinate path to map it later. We'll also want to 
-        store the maximum/minimum longitude and latitude so that we 
-        can get the correct sizing of our plot (although this will 
-        occur in the _parse_coord_path) method. 
+        For any lst_of_paths that comes in, do the following: 
+            * parse the coordinate path - this involves making 
+              that the odd shapes that some of the paths are read
+              in as are transformed in such a way that Basemap can 
+              plot them; it also involves grabbing the max/min 
+              lat/long and storing them in `self.lat_pts` and 
+              `self.lng_pts`
+            * yield the parsed coordinate path
 
         Args: 
         ----
-            lst_of_paths: list 
+            lst_of_paths: list of lat/long coordinates 
         """
 
         lst_of_paths = np.array(lst_of_paths)
+        # Occasionally we get a list that has multiple 
+        # lists of paths (unclear why), and the easiest 
+        # way to handle this was to cast it to an 
+        # np.ndarray and flatten it.  
         if lst_of_paths.shape[0] > 1: 
             lst_of_paths= lst_of_paths.flatten()
 
         for coord_path in lst_of_paths: 
             coord_path_arr = np.array(coord_path)
+            # We don't want to parse the path if it's only 
+            # one dimensional. 
             if len(coord_path_arr.shape) > 1: 
                 self._parse_coord_path(coord_path_arr)
             yield np.array(coord_path)
@@ -163,6 +252,10 @@ class USMapBuilder(object):
         lng_pts_arr = coord_path_arr[lng_pts_mask][:, 0]
         lat_pts_arr = coord_path_arr[lat_pts_mask][:, 1]
 
+        # The if statements are basically extra checking to make
+        # sure there are no issues/errors. Occasionally with the 
+        # filtering directly above we end up with no lat/long points
+        # in the array. 
         if lng_pts_arr.shape[0] != 0: 
             lng_min, lng_max = lng_pts_arr.min(), lng_pts_arr.max()
             self.lng_pts.extend([lng_min, lng_max])
@@ -173,24 +266,27 @@ class USMapBuilder(object):
     def _calc_bounds(self): 
         """This will calculate the min/max lat/long of our map. 
         
-        Here, we'll calculate the lat/long of the corners of our map, 
-        as well as the lat/long bounds of the map. We'll also calculate 
-        where the center of the map needs to be. 
+        Use the `self.lng_pts` and `self.lat_pts` lists to calculate 
+        the boundaries for our map. These lists hold the min/max
+        lat/long of each path that was parsed (e.g. a kind of local
+        min/max). Taking the min/max of these lists will give the 
+        overall min/max of the lat/long (e.g. a kind of global min/max). 
         """
 
         lng_pts_arr = np.array(self.lng_pts)
         lat_pts_arr = np.array(self.lat_pts)
         
-        # In _parse_coord_path, we were looking for the local min/max of 
-        # the lat/long. in a coordinate path. Here we're getting it globally
-        # across all paths that are included in this map. 
         self.lat_min, self.lat_max = lat_pts_arr.min(), lat_pts_arr.max()
         self.lng_min, self.lng_max = lng_pts_arr.min(), lng_pts_arr.max()
         self._center_lng = (self.lng_max - self.lng_min) / 2 + self.lng_min
         self._center_lat = (self.lat_max - self.lat_min) / 2 + self.lat_min
 
     def _calc_corners(self): 
-        """This will calculate the lat/long at the corners of our map."""
+        """This will calculate the lat/long at the corners of our map. 
+
+        The lat/long at the corners will just be the lat/long min/max, 
+        plus any padding to add. 
+        """
 
         self._llcrnrlat = self.lat_min
         self._llcrnrlon = self.lng_min
@@ -209,12 +305,13 @@ class USMapBuilder(object):
     def _create_map(self): 
         """Initialize the map of the inputted state."""
 
-        # The first four arguments define the bounds of the box, with a 
-        # padding of plus one. The next two are some standard specs., and 
-        # the last give additional bounds to the box and where to center it. 
         if self.figsize and not self.ax: 
             fig = plt.figure(figsize=self.figsize)
 
+        # The first four arguments define the bounds of the box, 
+        # The next two are some standard specs., and the last give 
+        # additional bounds to the box, where to center it, and 
+        # an optional axis to plot on. 
         self.geo_map = Basemap(llcrnrlon=self._llcrnrlon,
                 llcrnrlat=self._llcrnrlat, 
                 urcrnrlon=self._urcrnrlon,
@@ -243,6 +340,7 @@ class USMapBuilder(object):
         """Plot the inputted points on the self.geo_map stored on the class
 
         Args: 
+        ----
             points: iterable of lat/long/color pairs 
                 The input here should be an iterable, where each item contains
                 the lat/long of a point to plot, along with the color of the
@@ -251,12 +349,25 @@ class USMapBuilder(object):
 
         for point in points: 
             lon, lat, marker = point[0], point[1], point[2]
+            # This line translates it to the x, y space of the 
+            # self.geo_map. 
             x, y = self.geo_map(lon, lat)
             self.geo_map.plot(x, y, marker, markersize=markersize)
 
     def plot_boundary(self, filepath): 
-        """Plot the inputted boundary on the initialized map."""
+        """Plot the inputted boundary on the initialized map.
 
-        self.geo_map.readshapefile(filepath, name='Filepath boundaries', color='blue')
+        Use the `readshapefile` method available on a Basemap object
+        to plot any boundaries given in the filepath. 
+        
+        Args: 
+        ----
+            filepath: str
+                Holds a filepath of a shapefile that contains additional 
+                boundaries to plot on the map. 
+        """
+
+        self.geo_map.readshapefile(filepath, name='Filepath boundaries', 
+                color='blue')
 
 

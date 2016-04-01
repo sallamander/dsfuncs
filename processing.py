@@ -22,8 +22,8 @@ def remove_outliers(data, std_dev_cutoff=2):
     Args: 
         data: 1d numpy.ndarray 
         std_dev_cutoff: int
-            defines how many standard deviations to go away 
-            from the mean to label outliers 
+            Defines how many standard deviations to go away 
+            from the mean to label outliers. 
     """
 
     mean, std_dev = data.mean(), data.std()
