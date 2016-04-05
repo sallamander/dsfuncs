@@ -9,4 +9,4 @@ setup(name='dsfuncs',
       author='Sean Sall',
       url='https://github.com/sallamander/dsfuncs.git',
       packages=[],
-      )
+)
